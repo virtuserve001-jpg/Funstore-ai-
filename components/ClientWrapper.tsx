@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, createContext, useContext } from 'react';
 import Navbar from '@/components/Navbar';
 import CartDrawer from '@/components/CartDrawer';
 import ChatInterface from '@/components/ChatInterface';
@@ -8,6 +8,28 @@ import { Product } from '@/lib/products';
 
 interface CartItem extends Product {
   quantity: number;
+}
+
+interface CartContextType {
+  activeEmail: string;
+  setActiveEmail: (email: string) => void;
+  currency: string;
+  setCurrency: (currency: string) => void;
+  cartItems: CartItem[];
+  onAddToCart: (product: Product) => void;
+  onRemoveItem: (id: string) => void;
+  onClearCart: () => void;
+  openCart: () => void;
+}
+
+const CartContext = createContext<CartContextType | null>(null);
+
+export function useCart() {
+  const context = useContext(CartContext);
+  if (!context) {
+    throw new Error("useCart must be used within a ClientWrapper");
+  }
+  return context;
 }
 
 export default function ClientWrapper({ children }: { children: React.ReactNode }) {
@@ -35,8 +57,20 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
     setCartItems([]);
   };
 
+  const value: CartContextType = {
+    activeEmail,
+    setActiveEmail,
+    currency,
+    setCurrency,
+    cartItems,
+    onAddToCart: handleAddToCart,
+    onRemoveItem: handleRemoveItem,
+    onClearCart: handleClearCart,
+    openCart: () => setIsCartOpen(true)
+  };
+
   return (
-    <>
+    <CartContext.Provider value={value}>
       <Navbar 
         activeEmail={activeEmail}
         setActiveEmail={setActiveEmail}
@@ -46,17 +80,7 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
         openCart={() => setIsCartOpen(true)}
       />
 
-      <main>
-        {React.Children.map(children, child => {
-          if (React.isValidElement(child)) {
-            return React.cloneElement(child as React.ReactElement<any>, { 
-              onAddToCart: handleAddToCart,
-              currency: currency
-            });
-          }
-          return child;
-        })}
-      </main>
+      <main>{children}</main>
 
       <CartDrawer 
         isOpen={isCartOpen}
@@ -71,6 +95,6 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
         activeEmail={activeEmail}
         currency={currency}
       />
-    </>
+    </CartContext.Provider>
   );
 }
