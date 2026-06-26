@@ -2,14 +2,11 @@
 
 import React, { useState } from 'react';
 import { products, Product } from '@/lib/products';
+import { useCart } from '@/components/ClientWrapper';
 import { Sparkles, ShoppingBag, ArrowRight } from 'lucide-react';
 
-interface HomePageProps {
-  onAddToCart?: (product: Product) => void;
-  currency?: string;
-}
-
-export default function HomePage({ onAddToCart, currency = "USD" }: HomePageProps) {
+export default function HomePage() {
+  const { onAddToCart, currency } = useCart();
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const categories = ["All", "Audio", "Wearables", "Cameras", "Accessories"];
 
@@ -17,7 +14,6 @@ export default function HomePage({ onAddToCart, currency = "USD" }: HomePageProp
     ? products 
     : products.filter(p => p.category === selectedCategory);
 
-  // Helper to show approximate currency symbol
   const getCurrencySymbol = (cur: string) => {
     switch(cur) {
       case 'EUR': return '€';
@@ -103,7 +99,7 @@ export default function HomePage({ onAddToCart, currency = "USD" }: HomePageProp
                 </div>
 
                 <button 
-                  onClick={() => onAddToCart && onAddToCart(product)}
+                  onClick={() => onAddToCart(product)}
                   className="w-full py-3 bg-gray-900 hover:bg-indigo-600 text-white font-medium rounded-xl transition flex items-center justify-center space-x-2 group/btn"
                 >
                   <ShoppingBag className="w-4 h-4" />
@@ -117,4 +113,4 @@ export default function HomePage({ onAddToCart, currency = "USD" }: HomePageProp
       </div>
     </div>
   );
-}
+                                                   }
