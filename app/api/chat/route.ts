@@ -17,10 +17,10 @@ export async function POST(req: Request) {
     // 1. Fetch CRM Profile from Airtable (Pillar 5)
     const customerProfile = activeEmail ? await getCustomerProfile(activeEmail) : null;
 
-    // 2. Format history for Gemini
+    // 2. Format history for Gemini with strict TypeScript casting
     const history = messages.slice(0, -1).map((msg: { role: string, content: string }) => ({
-      role: msg.role === 'user' ? 'user' : 'model',
-      parts: [{ text: msg.content }]
+      role: (msg.role === 'user' ? 'user' : 'model') as 'user' | 'model',
+      parts: [{ text: msg.content }] as [{ text: string }]
     }));
 
     // 3. Generate AI Response
@@ -49,4 +49,4 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
-}
+                                }
