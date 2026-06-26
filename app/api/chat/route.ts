@@ -17,11 +17,14 @@ export async function POST(req: Request) {
     // 1. Fetch CRM Profile from Airtable (Pillar 5)
     const customerProfile = activeEmail ? await getCustomerProfile(activeEmail) : null;
 
-    // 2. Format history for Gemini with strict TypeScript casting
-    const history = messages.slice(0, -1).map((msg: { role: string, content: string }) => ({
-      role: (msg.role === 'user' ? 'user' : 'model') as 'user' | 'model',
-      parts: [{ text: msg.content }] as [{ text: string }]
-    }));
+    // 2. Format history for Gemini (Filter out the initial welcome message because Gemini API strictly requires history to start with a 'user' message)
+    const history = messages
+      .slice(0, -1)
+      .filter((msg: any) => msg.id !== 'welcome' && !msg.content.includes("I'm FunBot"))
+      .map((msg: any) => ({
+        role: (msg.role === 'user' ? 'user' : 'model') as 'user' | 'model',
+        parts: [{ text: msg.content }] as [{ text: string }]
+      }));
 
     // 3. Generate AI Response
     let reply = await generateChatReply(history, latestMessage, customerProfile, currency || 'USD');
@@ -35,6 +38,21 @@ export async function POST(req: Request) {
       reply += "\n\n🚨 I have officially escalated your ticket to our senior human support team. The store owner has been notified via priority email and will contact you shortly.";
       
       // Fire Brevo Email to Store Owner
+      await sendEscalationEmail(activeEmail || 'guest@example.com', latestMessage);
+    }
+
+    // 5. Log Conversation to Airtable Analytics (Pillar 8)
+    await logConversation(activeEmail || 'guest@example.com', latestMessage, reply, isEscalated);
+
+    return NextResponse.json({ reply });
+  } catch (error: any) {
+    console.error("Chat API error:", error);
+    return NextResponse.json(
+      { error: error.message || "Something went wrong in the chat API." }, 
+      { status: 500 }
+    );
+  }
+}      // Fire Brevo Email to Store Owner
       await sendEscalationEmail(activeEmail || 'guest@example.com', latestMessage);
     }
 
