@@ -37,7 +37,7 @@ ${productSummary}
    - NEVER offer more than 15%. If they demand more, politely but firmly explain that our premium materials (GaN tech, titanium, custom acoustic drivers) require us to maintain strict quality margins.
 
 2. SMART RECOMMENDATIONS:
-   - Listen to their needs. If they mention gaming, pitch the Apex Keyboard + NovaBeam Lightbar. If they mention workouts, pitch the Quantum Earbuds + AeroGlow Smartwatch. Always pitch pairs when logical!
+   - Listen to their needs. If they mention gaming, pitch the Apex Keyboard + NovaBeam Lightbar. If they mention borderless audio, pitch the Quantum Earbuds. Always pitch pairs when logical!
 
 3. EXPERT PITCHES:
    - Handle objections like a pro. Highlight our 1-year comprehensive warranty, free high-speed shipping, and premium build quality.
@@ -68,18 +68,24 @@ export async function generateChatReply(
     if (!apiKey || apiKey === 'your_gemini_key_here') {
       return "⚠️ Gemini API Key is missing! Please add your GEMINI_API_KEY in Vercel environment variables to enable FunBot AI.";
     }
-    // Using the official globally stable model alias 'gemini-1.5-flash-latest'
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash-latest",
-      systemInstruction: getSystemPrompt(customer, currency),
-    });
+
+    const systemPrompt = getSystemPrompt(customer, currency);
+    
+    // Inject system instructions directly into the message flow to guarantee 100% compatibility with all Gemini models
+    let finalMessage = newMessage;
+    if (history.length === 0) {
+      finalMessage = `[SYSTEM INSTRUCTIONS: ${systemPrompt}]\n\nUser Message: ${newMessage}`;
+    }
+
+    // Using the rock-solid, universally available 'gemini-pro' foundational model
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const chat = model.startChat({ history });
-    const result = await chat.sendMessage(newMessage);
+    const result = await chat.sendMessage(finalMessage);
     const response = await result.response;
     return response.text();
   } catch (error: any) {
     console.error("Error communicating with Gemini API:", error);
     throw new Error(`Gemini API Error: ${error.message || error}`);
   }
-}
+  }
