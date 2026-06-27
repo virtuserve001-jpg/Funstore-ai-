@@ -77,15 +77,34 @@ export async function generateChatReply(
       finalMessage = `[SYSTEM INSTRUCTIONS: ${systemPrompt}]\n\nUser Message: ${newMessage}`;
     }
 
-    // Using the rock-solid, universally available 'gemini-pro' foundational model
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    // Dynamic Multi-Model Fallback Loop (Guarantees finding the active model on your specific API key)
+    const modelNames = [
+      "gemini-2.0-flash",
+      "gemini-1.5-flash-002",
+      "gemini-1.5-pro-002",
+      "gemini-2.0-flash-exp",
+      "gemini-1.5-flash-001"
+    ];
 
-    const chat = model.startChat({ history });
-    const result = await chat.sendMessage(finalMessage);
-    const response = await result.response;
-    return response.text();
+    let lastError: any = null;
+
+    for (const modelName of modelNames) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const chat = model.startChat({ history });
+        const result = await chat.sendMessage(finalMessage);
+        const response = await result.response;
+        return response.text();
+      } catch (err: any) {
+        console.warn(`Model ${modelName} failed or not available on this key:`, err.message || err);
+        lastError = err;
+        // Continue loop to try the next stable model in the list
+      }
+    }
+
+    throw new Error(`Gemini API Error across all fallback models: ${lastError?.message || lastError}`);
   } catch (error: any) {
     console.error("Error communicating with Gemini API:", error);
     throw new Error(`Gemini API Error: ${error.message || error}`);
   }
-  }
+}
