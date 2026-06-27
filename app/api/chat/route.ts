@@ -52,19 +52,4 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
-}      // Fire Brevo Email to Store Owner
-      await sendEscalationEmail(activeEmail || 'guest@example.com', latestMessage);
-    }
-
-    // 5. Log Conversation to Airtable Analytics (Pillar 8)
-    await logConversation(activeEmail || 'guest@example.com', latestMessage, reply, isEscalated);
-
-    return NextResponse.json({ reply });
-  } catch (error: any) {
-    console.error("Chat API error:", error);
-    return NextResponse.json(
-      { error: error.message || "Something went wrong in the chat API." }, 
-      { status: 500 }
-    );
-  }
-                                }
+                                                                     }
