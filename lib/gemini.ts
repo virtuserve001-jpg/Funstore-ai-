@@ -68,8 +68,9 @@ export async function generateChatReply(
     if (!apiKey || apiKey === 'your_gemini_key_here') {
       return "⚠️ Gemini API Key is missing! Please add your GEMINI_API_KEY in Vercel environment variables to enable FunBot AI.";
     }
+    // Using the official globally stable model alias 'gemini-1.5-flash-latest'
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
+      model: "gemini-1.5-flash-latest",
       systemInstruction: getSystemPrompt(customer, currency),
     });
 
@@ -77,8 +78,8 @@ export async function generateChatReply(
     const result = await chat.sendMessage(newMessage);
     const response = await result.response;
     return response.text();
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error communicating with Gemini API:", error);
-    throw new Error("Failed to generate AI response.");
+    throw new Error(`Gemini API Error: ${error.message || error}`);
   }
 }
